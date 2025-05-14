@@ -221,32 +221,84 @@ class VPNTransferGUI:
         else:
             self.texto_resultados.insert(tk.END, "[OK] Transferencia finalizada.\n")
 
-    
-    def dibujar_ruta(self, ruta, titulo):
+            # Simulación ruta óptima
+            tamano = os.path.getsize(self.archivo_seleccionado) / (1024 * 1024)  # MB
+            latencia_total = sum(self.latencias.get((camino[i], camino[i+1]), 0)
+                                 for i in range(len(camino)-1))
+            ancho_prom = sum(self.anchos_banda.get((camino[i], camino[i+1]), 0)
+                             for i in range(len(camino)-1)) / (len(camino)-1)
+
+            tiempo_optimo = (tamano * 8) / ancho_prom + (latencia_total / 1000)
+
+            self.texto_resultados.insert(tk.END, f"\n[Simulación ruta óptima]\n")
+            self.texto_resultados.insert(tk.END, f"- Latencia total: {latencia_total:.2f} ms\n")
+            self.texto_resultados.insert(tk.END, f"- Ancho de banda promedio: {ancho_prom:.2f} Mbps\n")
+            self.texto_resultados.insert(tk.END, f"- Tiempo estimado: {tiempo_optimo:.2f} segundos\n")
+
+            # Comparación con ruta directa (si existe)
+            clave_directa = (self.ip_local, destino)
+            if clave_directa in self.latencias and clave_directa in self.anchos_banda:
+                lat_directa = self.latencias[clave_directa]
+                ancho_directa = self.anchos_banda[clave_directa]
+                tiempo_directo = (tamano * 8) / ancho_directa + (lat_directa / 1000)
+
+                self.texto_resultados.insert(tk.END, f"\n[Comparación con ruta directa]\n")
+                self.texto_resultados.insert(tk.END, f"- Latencia directa: {lat_directa:.2f} ms\n")
+                self.texto_resultados.insert(tk.END, f"- Ancho de banda directa: {ancho_directa:.2f} Mbps\n")
+                self.texto_resultados.insert(tk.END, f"- Tiempo estimado directo: {tiempo_directo:.2f} segundos\n")
+
+                diferencia = tiempo_directo - tiempo_optimo
+                if diferencia > 0:
+                    self.texto_resultados.insert(tk.END, f"→ La ruta optimizada es más rápida por {diferencia:.2f} s\n")
+                else:
+                    self.texto_resultados.insert(tk.END, f"→ La ruta directa es más rápida por {abs(diferencia):.2f} s\n")
+            else:
+                self.texto_resultados.insert(tk.END, "\n[Info] No hay ruta directa disponible para comparación.\n")
+                    # Mostrar visualmente ambas rutas
+        ruta_directa = [self.ip_local, destino] if clave_directa in self.latencias else None
+        self.dibujar_ruta(camino, "Rutas: Óptima vs. Directa", ruta_directa=ruta_directa)
+
+
+    def dibujar_ruta(self, ruta_optima, titulo, ruta_directa=None):
         frame = self.canvas_rutas
         for widget in frame.winfo_children():
             widget.destroy()
-        
+
         fig, ax = plt.subplots(figsize=(7, 5))
         pos = nx.circular_layout(self.grafo_latencia)
-        
-        # Dibujar grafo completo
+
+        # Dibujar grafo base
         nx.draw(self.grafo_latencia, pos, ax=ax, with_labels=True,
-               node_size=600, node_color="lightgray", alpha=0.7)
-        
-        # Resaltar ruta
-        nx.draw_networkx_nodes(self.grafo_latencia, pos, nodelist=ruta,
-                             node_color="red", node_size=800)
-        
-        aristas_ruta = [(ruta[i], ruta[i+1]) for i in range(len(ruta)-1)]
-        nx.draw_networkx_edges(self.grafo_latencia, pos, edgelist=aristas_ruta,
-                             edge_color="red", width=2)
-        
+                node_size=600, node_color="lightgray", alpha=0.6)
+
+        edge_labels = nx.get_edge_attributes(self.grafo_latencia, 'weight')
+        edge_labels = {k: f"{v:.1f} ms" for k, v in edge_labels.items()}
+        nx.draw_networkx_edge_labels(self.grafo_latencia, pos, edge_labels=edge_labels, font_size=8)
+
+        # Ruta óptima (rojo)
+        if ruta_optima:
+            nx.draw_networkx_nodes(self.grafo_latencia, pos, nodelist=ruta_optima,
+                                node_color="red", node_size=800, label="Óptima")
+            aristas_optima = [(ruta_optima[i], ruta_optima[i+1]) for i in range(len(ruta_optima)-1)]
+            nx.draw_networkx_edges(self.grafo_latencia, pos, edgelist=aristas_optima,
+                                edge_color="red", width=2)
+
+        # Ruta directa (azul)
+        if ruta_directa:
+            nx.draw_networkx_nodes(self.grafo_latencia, pos, nodelist=ruta_directa,
+                                node_color="blue", node_size=800, label="Directa")
+            aristas_directa = [(ruta_directa[i], ruta_directa[i+1]) for i in range(len(ruta_directa)-1)]
+            nx.draw_networkx_edges(self.grafo_latencia, pos, edgelist=aristas_directa,
+                                edge_color="blue", width=2, style="dashed")
+
         ax.set_title(titulo)
-        
+        ax.legend(["Óptima (rojo)", "Directa (azul, dashed)"])
+
         canvas = FigureCanvasTkAgg(fig, master=frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+
     
     def simular_transferencia(self, destino):
         # Simulación basada en métricas reales
