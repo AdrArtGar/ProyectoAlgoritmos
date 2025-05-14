@@ -19,10 +19,11 @@ Sistema de transferencia de archivos optimizado para redes VPN que utiliza algor
 
 1. Clonar repositorio:
      git clone https://github.com/AdrArtGar/ProyectoAlgoritmos.git
+
      cd ProyectoAlgoritmos
-2. Instalar dependencias:
+3. Instalar dependencias:
      pip install -r requirements.txt
-3. Instalar iperf3
+4. Instalar iperf3
    ### Ubuntu/Debian
      sudo apt install iperf3
    ### Windows
