@@ -30,7 +30,7 @@ Sistema de transferencia de archivos optimizado para redes VPN que utiliza algor
      instalar directamente de la pagina: https://iperf.fr/
 
 ## Configuración
-Crear archivo ips.txt con las IPs de los nodos (una por línea)
+Crear archivo ips.txt con las IPs de los nodos
 Iniciar servidores iperf3 en cada nodo:
   iperf3 -s -p 5201
 
