@@ -14,8 +14,8 @@ import threading
 from datetime import datetime
 import glob
 
-from Cliente import enviar_archivo, enviar_por_ruta
-from Server import start_server
+from cliente import enviar_archivo, enviar_por_ruta
+from server import start_server
 from dijkstra import dijkstra
 from kruskal import kruskal
 
