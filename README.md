@@ -38,7 +38,7 @@ Crear archivo ips.txt con las IPs de los nodos
    - *python gui.py*
 3. Tomar métricas de red
    - *python tomarmetricas.py --nodos ips.txt --local [TU_IP]*
-## Abrir y cerrar la GUI para refrescar las metricas##
+*Abrir y cerrar la GUI para refrescar las metricas*
 
 ## Visualización
 La GUI muestra:
