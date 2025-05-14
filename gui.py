@@ -215,7 +215,7 @@ class VPNTransferGUI:
             if len(ruta_ip) == 1:
                 enviar_archivo(ruta_ip[0].split(':')[0], 3843, self.archivo_seleccionado)
             else:
-                enviar_por_ruta(ruta_ip[0].split(':')[0], 3843, self.archivo_seleccionado, ruta_ip)
+                enviar_por_ruta(ruta_ip[0].split(':')[0], 3843, self.archivo_seleccionado, ruta_ip[1:])
         except Exception as e:
             self.texto_resultados.insert(tk.END, f"[ERROR] Transferencia falló: {e}\n")
         else:
