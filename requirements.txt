@@ -1,0 +1,20 @@
+# Requirements para ProyectoAlgoritmos
+# Python 3.8+
+
+# Bibliotecas principales
+networkx>=2.6
+matplotlib>=3.5
+numpy>=1.21
+
+# Interfaz gráfica
+tkinter>=8.6  # Normalmente viene con Python
+
+# Mediciones de red
+iperf3>=0.1.11  # Necesario para las pruebas de ancho de banda
+ping3>=4.0.4    # Alternativa para medición de latencia
+
+# Procesamiento paralelo (opcional pero recomendado)
+threading6>=1.0  # Para manejo de hilos en el servidor
+
+# Manejo de archivos binarios
+struct2>=0.4    # Para empaquetado de datos en transferencias
