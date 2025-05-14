@@ -43,7 +43,7 @@ Iniciar servidores iperf3 en cada nodo:
      python gui.py
 ## Visualización
 La GUI muestra:
-  Grafos de latencia/ancho de banda
-  MST
-  Rutas óptimas calculadas
-  Panel de transferencia de archivos
+  -Grafos de latencia/ancho de banda
+  -MST
+  -Rutas óptimas calculadas
+  -Panel de transferencia de archivos
