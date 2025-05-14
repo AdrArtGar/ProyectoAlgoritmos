@@ -33,10 +33,11 @@ Sistema de transferencia de archivos optimizado para redes VPN que utiliza algor
 Crear archivo ips.txt con las IPs de los nodos
 
 ## Para el uso
-1. Usar la GUI (Inicia automaticamente los servidores necesarios iperf3)
-     python gui.py
-2. Tomar métricas de red
-     python tomarmetricas.py --nodos ips.txt --local [TU_IP]
+1. Conectar a la VPN (Usaremos hamachi)
+2. Usar la GUI (Inicia automaticamente los servidores necesarios iperf3)
+   - *python gui.py*
+3. Tomar métricas de red
+   - *python tomarmetricas.py --nodos ips.txt --local [TU_IP]*
 ## Abrir y cerrar la GUI para refrescar las metricas##
 
 ## Visualización
