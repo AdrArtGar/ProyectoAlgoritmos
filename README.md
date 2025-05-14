@@ -31,19 +31,17 @@ Sistema de transferencia de archivos optimizado para redes VPN que utiliza algor
 
 ## Configuración
 Crear archivo ips.txt con las IPs de los nodos
-Iniciar servidores iperf3 en cada nodo:
-  iperf3 -s -p 5201
 
 ## Para el uso
-1. Tomar métricas de red
-     python tomarmetricas.py --nodos ips.txt --local [TU_IP]
-2. Iniciar servidor
-     python server.py
-3. Usra la GUI
+1. Usar la GUI (Inicia automaticamente los servidores necesarios iperf3)
      python gui.py
+2. Tomar métricas de red
+     python tomarmetricas.py --nodos ips.txt --local [TU_IP]
+## Abrir y cerrar la GUI para refrescar las metricas##
+
 ## Visualización
 La GUI muestra:
-  -Grafos de latencia/ancho de banda
-  -MST
-  -Rutas óptimas calculadas
-  -Panel de transferencia de archivos
+- Grafos de latencia/ancho de banda
+- MST
+- Rutas óptimas calculadas
+- Panel de transferencia de archivos
