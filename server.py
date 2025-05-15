@@ -120,10 +120,34 @@ def handle_client(conn, addr):
                             chunk = recv_all(conn, min(4096, bytes_remaining))
                             s.sendall(chunk)
                             bytes_remaining -= len(chunk)
-            
-                        # Wait for response back from downstream...
+
+                        # Esperar confirmación del siguiente nodo
                         op_code = ord(recv_all(s, 1))
-                        # (rest of your confirmation-handling code)
+                        if op_code != OP_RESPONSE:
+                            raise Exception("Nodo destino no respondió correctamente")
+
+                        cod = ord(recv_all(s, 1))
+                        msg_len = struct.unpack('>I', recv_all(s, 4))[0]
+                        msg = recv_all(s, msg_len).decode()
+
+                        if cod == 0x00:
+                            print(f"[OK] Confirmación del siguiente nodo: {msg}")
+                            conn.sendall(struct.pack('B', OP_RESPONSE))
+                            conn.sendall(struct.pack('B', 0x00))
+                            conn.sendall(struct.pack('>I', len(msg)) + msg.encode())
+                        else:
+                            print(f"[ERROR] Nodo intermedio falló: {msg}")
+                            conn.sendall(struct.pack('B', OP_RESPONSE))
+                            conn.sendall(struct.pack('B', 0x01))
+                            conn.sendall(struct.pack('>I', len(msg)) + msg.encode())
+
+                except Exception as e:
+                    error_msg = f"Fallo al retransmitir: {e}"
+                    print(f"[!] {error_msg}")
+                    conn.sendall(struct.pack('B', OP_RESPONSE))
+                    conn.sendall(struct.pack('B', 0x01))
+                    conn.sendall(struct.pack('>I', len(error_msg)) + error_msg.encode())
+
 
     except Exception as e:
         print(f"[!] Error: {e}")
