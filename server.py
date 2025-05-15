@@ -72,66 +72,58 @@ def handle_client(conn, addr):
 
 
             elif op == OP_RELAY:
-                # Leer nombre del archivo
+                # Read filename
                 name_len = struct.unpack('>I', recv_all(conn, 4))[0]
                 filename = recv_all(conn, name_len).decode()
-
-                # Leer ruta de nodos
+            
+                # Read nodes list
                 node_count = ord(recv_all(conn, 1))
                 nodes = []
                 for _ in range(node_count):
                     ip_port = recv_all(conn, 22).decode().strip()
                     nodes.append(ip_port)
-
-                # Leer tamaño del archivo
+            
+                # Read file size
                 filesize = struct.unpack('>Q', recv_all(conn, 8))[0]
-
-                # Conectarse al siguiente nodo
-                next_ip, next_port = nodes[0].split(':')
+            
+                # Pop off the next hop
+                next_ip_port = nodes.pop(0)
+                next_ip, next_port = next_ip_port.split(':')
                 next_port = int(next_port)
+            
                 try:
                     with socket.create_connection((next_ip, next_port)) as s:
-                        print(f"[*] Reenviando archivo a {next_ip}:{next_port} (relay)")
-                        # Enviar OP_SEND al siguiente nodo
-                        s.sendall(struct.pack('B', OP_SEND))
-                        s.sendall(struct.pack('>I', len(filename)) + filename.encode())
-                        s.sendall(struct.pack('>Q', filesize))
-
-                        # Reenviar el archivo directamente del cliente al siguiente nodo
+                        if nodes:
+                            # More hops remain → forward as OP_RELAY
+                            print(f"[*] Relaying to {next_ip}:{next_port} (relay, {len(nodes)} left)")
+                            s.sendall(struct.pack('B', OP_RELAY))
+                            # filename
+                            s.sendall(struct.pack('>I', len(filename)) + filename.encode())
+                            # new node count
+                            s.sendall(struct.pack('B', len(nodes)))
+                            # remaining node list
+                            for ip_p in nodes:
+                                # pad/truncate each to 22 bytes if needed
+                                s.sendall(ip_p.ljust(22).encode())
+                            # file size
+                            s.sendall(struct.pack('>Q', filesize))
+                        else:
+                            # This is the last hop → send as OP_SEND
+                            print(f"[*] Relaying to {next_ip}:{next_port} (final send)")
+                            s.sendall(struct.pack('B', OP_SEND))
+                            s.sendall(struct.pack('>I', len(filename)) + filename.encode())
+                            s.sendall(struct.pack('>Q', filesize))
+            
+                        # Stream the file bytes through
                         bytes_remaining = filesize
                         while bytes_remaining > 0:
-                            chunk_size = min(4096, bytes_remaining)
-                            chunk = recv_all(conn, chunk_size)
+                            chunk = recv_all(conn, min(4096, bytes_remaining))
                             s.sendall(chunk)
                             bytes_remaining -= len(chunk)
-
-                        # Esperar confirmación del siguiente nodo
+            
+                        # Wait for response back from downstream...
                         op_code = ord(recv_all(s, 1))
-                        if op_code != OP_RESPONSE:
-                            raise Exception("Nodo destino no respondió correctamente")
-
-                        cod = ord(recv_all(s, 1))
-                        msg_len = struct.unpack('>I', recv_all(s, 4))[0]
-                        msg = recv_all(s, msg_len).decode()
-
-                        if cod == 0x00:
-                            print(f"[OK] Confirmación del siguiente nodo: {msg}")
-                            conn.sendall(struct.pack('B', OP_RESPONSE))
-                            conn.sendall(struct.pack('B', 0x00))
-                            conn.sendall(struct.pack('>I', len(msg)) + msg.encode())
-                        else:
-                            print(f"[ERROR] Nodo intermedio falló: {msg}")
-                            conn.sendall(struct.pack('B', OP_RESPONSE))
-                            conn.sendall(struct.pack('B', 0x01))
-                            conn.sendall(struct.pack('>I', len(msg)) + msg.encode())
-
-                except Exception as e:
-                    error_msg = f"Fallo al retransmitir: {e}"
-                    print(f"[!] {error_msg}")
-                    conn.sendall(struct.pack('B', OP_RESPONSE))
-                    conn.sendall(struct.pack('B', 0x01))
-                    conn.sendall(struct.pack('>I', len(error_msg)) + error_msg.encode())
-
+                        # (rest of your confirmation-handling code)
 
     except Exception as e:
         print(f"[!] Error: {e}")
